@@ -295,7 +295,11 @@ export class Server<
         if (err || !allow) {
           run();
         } else {
-          fn(this.parentNsps.get(nextFn.value)!.createChild(name));
+          let nsp = this._nsps.get(name);
+          if (!nsp) {
+            nsp = this.parentNsps.get(nextFn.value)!.createChild(name);
+          }
+          process.nextTick(() => fn(nsp as Namespace));
         }
       });
     };

@@ -942,6 +942,48 @@ describe("socket.io", () => {
           });
         });
       });
+
+      it("should run middleware on the first connection", (done) => {
+        const srv = createServer();
+        const sio = new Server(srv);
+        const nsp = "/dynamic";
+        let called = false;
+        srv.listen(() => {
+          const socket = client(srv, nsp);
+          sio.of((name, query, next) => {
+            next(null, true);
+            sio.of(nsp).use((socket, next) => {
+              called = true;
+              next();
+            });
+          });
+          socket.on("connect", () => {
+            expect(called).to.equal(true);
+            done();
+          });
+        });
+      });
+
+      it("should run middleware on the first connection when the namespace has been created", (done) => {
+        const srv = createServer();
+        const sio = new Server(srv);
+        const nsp = "/dynamic";
+        let called = false;
+        srv.listen(() => {
+          const socket = client(srv, nsp);
+          sio.of((name, query, next) => {
+            sio.of(nsp).use((socket, next) => {
+              called = true;
+              next();
+            });
+            next(null, true);
+          });
+          socket.on("connect", () => {
+            expect(called).to.equal(true);
+            done();
+          });
+        });
+      });
     });
   });
 
